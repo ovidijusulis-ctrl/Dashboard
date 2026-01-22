@@ -4,499 +4,201 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Portfolio Dashboard</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/recharts/2.10.3/Recharts.min.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    body { background-color: #111827; }
-    .animate-spin { animation: spin 1s linear infinite; }
-    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    body { background-color: #111827; font-family: system-ui, -apple-system, sans-serif; margin: 0; }
   </style>
 </head>
-<body>
-  <div id="root"></div>
+<body class="bg-gray-900 text-white min-h-screen p-4 md:p-6">
+  <div id="app" class="max-w-7xl mx-auto"></div>
 
-  <script type="text/babel">
-    const { useState, useEffect, useMemo } = React;
-    const { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } = Recharts;
-
-    // Your portfolio holdings
-    const HOLDINGS = {
-      japanese: [
-        { ticker: '6273.T', name: 'ＳＭＣ', shares: 1, avgCost: 65083, account: 'NISA', sector: 'Industrials' },
-        { ticker: '6315.T', name: 'ＴＯＷＡ', shares: 5, avgCost: 3062, account: 'NISA', sector: 'Industrials' },
-        { ticker: '6954.T', name: 'ファナック', shares: 10, avgCost: 6532, account: 'NISA', sector: 'Industrials' },
-        { ticker: '8058.T', name: '三菱商事', shares: 25, avgCost: 4033, account: 'NISA', sector: 'Trading' },
-        { ticker: '8766.T', name: '東京海上ＨＤ', shares: 10, avgCost: 5886, account: 'NISA', sector: 'Financials' },
+  <script>
+    // ===== PORTFOLIO DATA =====
+    const holdings = {
+      jp: [
+        { t: '6273', n: 'ＳＭＣ', s: 1, c: 65083, p: 61900, ch: -2.52 },
+        { t: '6315', n: 'ＴＯＷＡ', s: 5, c: 3062, p: 3090, ch: 2.66 },
+        { t: '6954', n: 'ファナック', s: 10, c: 6532, p: 6580, ch: 0.60 },
+        { t: '8058', n: '三菱商事', s: 25, c: 4033, p: 4082, ch: 0.89 },
+        { t: '8766', n: '東京海上ＨＤ', s: 10, c: 5886, p: 5811, ch: -0.14 },
       ],
       us: [
-        { ticker: 'VWO', name: 'Vanguard Emerging Markets ETF', shares: 20, avgCost: 55.96, account: 'NISA', sector: 'Broad Market', type: 'ETF' },
-        { ticker: 'VOO', name: 'Vanguard S&P 500 ETF', shares: 6, avgCost: 618.37, account: 'NISA', sector: 'Broad Market', type: 'ETF' },
-        { ticker: 'HDV', name: 'iShares Core High Dividend ETF', shares: 5, avgCost: 121.40, account: 'NISA', sector: 'High Dividend', type: 'ETF' },
-        { ticker: 'XLE', name: 'Energy Select Sector SPDR', shares: 34, avgCost: 45.16, account: 'NISA', sector: 'Energy', type: 'ETF' },
-        { ticker: 'XLU', name: 'Utilities Select Sector SPDR', shares: 40, avgCost: 42.78, account: 'NISA', sector: 'Utilities', type: 'ETF' },
-        { ticker: 'ED', name: 'Consolidated Edison', shares: 10, avgCost: 97.91, account: 'NISA', sector: 'Utilities', type: 'Stock' },
-        { ticker: 'MTZ', name: 'MasTec Inc', shares: 4, avgCost: 201.62, account: 'NISA', sector: 'Industrials', type: 'Stock' },
-        { ticker: 'DUOL', name: 'Duolingo', shares: 2, avgCost: 171.625, account: 'Specific', sector: 'Technology', type: 'Stock' },
-        { ticker: 'BITF', name: 'Bitfarms', shares: 7, avgCost: 0, account: 'General', sector: 'Crypto', type: 'Stock' },
-        { ticker: 'URA', name: 'Global X Uranium ETF', shares: 29, avgCost: 50.4989, account: 'NISA', sector: 'Energy', type: 'ETF' },
-        { ticker: 'IJR', name: 'iShares Core S&P Small-Cap ETF', shares: 15, avgCost: 119.5133, account: 'NISA', sector: 'Broad Market', type: 'ETF' },
+        { t: 'VWO', n: 'Vanguard EM', s: 20, c: 55.96, p: 56.11, ch: 1.03 },
+        { t: 'VOO', n: 'S&P 500', s: 6, c: 618.37, p: 630.29, ch: 1.15 },
+        { t: 'HDV', n: 'High Div', s: 5, c: 121.40, p: 127.80, ch: 1.07 },
+        { t: 'XLE', n: 'Energy', s: 34, c: 45.16, p: 48.75, ch: 2.42 },
+        { t: 'XLU', n: 'Utilities', s: 40, c: 42.78, p: 43.02, ch: 0.14 },
+        { t: 'ED', n: 'Con Edison', s: 10, c: 97.91, p: 103.84, ch: -1.15 },
+        { t: 'MTZ', n: 'MasTec', s: 4, c: 201.62, p: 243.80, ch: 1.44 },
+        { t: 'DUOL', n: 'Duolingo', s: 2, c: 171.63, p: 146.81, ch: -1.19 },
+        { t: 'BITF', n: 'Bitfarms', s: 7, c: 0, p: 2.69, ch: 0.75 },
+        { t: 'URA', n: 'Uranium', s: 29, c: 50.50, p: 56.15, ch: 3.75 },
+        { t: 'IJR', n: 'Small-Cap', s: 15, c: 119.51, p: 130.12, ch: 2.60 },
       ],
-      other: [
-        { type: 'Gold', name: '金', amount: 17.64098, avgCostPerGram: 18959.9444, unit: 'g' },
-        { type: 'MMF', name: 'GS米ドルファンド', units: 10045, costJPY: 15510.20 },
-        { type: 'CashJPY', name: '円預り金', amount: 66896 },
-        { type: 'CashUSD', name: '米ドル預り金', amount: 842.94 },
-      ]
+      gold: { g: 17.64, cost: 18960, price: 24605 },
+      cash: { jpy: 66896, usd: 842.94 },
+      mmf: 15966
     };
 
-    const SECTOR_COLORS = {
-      'Industrials': '#3B82F6', 'Trading': '#8B5CF6', 'Financials': '#EC4899',
-      'Broad Market': '#10B981', 'High Dividend': '#F59E0B', 'Energy': '#EF4444',
-      'Utilities': '#06B6D4', 'Technology': '#6366F1', 'Crypto': '#F97316',
-      'Gold': '#FBBF24', 'Cash': '#6B7280', 'MMF': '#84CC16',
-    };
+    const fx = 158.63;
 
-    // SVG Icons
-    const TrendingUp = () => <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>;
-    const TrendingDown = () => <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6" /></svg>;
-    const RefreshIcon = ({spinning}) => <svg className={`w-4 h-4 ${spinning ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>;
+    // ===== CALCULATIONS =====
+    function calc() {
+      const jpStocks = holdings.jp.map(x => {
+        const val = x.p * x.s;
+        const cost = x.c * x.s;
+        return { ...x, m: 'JP', val, cost, pl: val - cost, plPct: ((val - cost) / cost * 100) };
+      });
 
-    function PortfolioDashboard() {
-      const [prices, setPrices] = useState({});
-      const [exchangeRate, setExchangeRate] = useState(158.63);
-      const [goldPrice, setGoldPrice] = useState(24605);
-      const [loading, setLoading] = useState(true);
-      const [lastUpdate, setLastUpdate] = useState(null);
-      const [filter, setFilter] = useState('all');
-      const [sortBy, setSortBy] = useState('value');
-      const [sortDir, setSortDir] = useState('desc');
-      const [error, setError] = useState(null);
+      const usStocks = holdings.us.map(x => {
+        const valUSD = x.p * x.s;
+        const val = valUSD * fx;
+        const costUSD = x.c * x.s;
+        const cost = costUSD * fx;
+        const plUSD = valUSD - costUSD;
+        return { ...x, m: 'US', val, cost, pl: plUSD * fx, plPct: costUSD > 0 ? (plUSD / costUSD * 100) : 100 };
+      });
 
-      const fetchPrices = async () => {
-        setLoading(true);
-        setError(null);
+      const goldVal = holdings.gold.g * holdings.gold.price;
+      const goldCost = holdings.gold.g * holdings.gold.cost;
+      const cashJPY = holdings.cash.jpy;
+      const cashUSD = holdings.cash.usd * fx;
 
-        try {
-          const allTickers = [
-            ...HOLDINGS.japanese.map(h => h.ticker),
-            ...HOLDINGS.us.map(h => h.ticker),
-            'JPY=X',
-          ];
+      const jpTotal = jpStocks.reduce((a, x) => a + x.val, 0);
+      const usTotal = usStocks.reduce((a, x) => a + x.val, 0);
+      const total = jpTotal + usTotal + goldVal + cashJPY + cashUSD + holdings.mmf;
 
-          const symbols = allTickers.join(',');
-          const url = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${symbols}`;
-          const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
+      const allStocks = [...jpStocks, ...usStocks].sort((a, b) => b.val - a.val);
+      const gainers = [...allStocks].sort((a, b) => b.ch - a.ch).slice(0, 3);
+      const losers = [...allStocks].sort((a, b) => a.ch - b.ch).slice(0, 3);
 
-          const response = await fetch(proxyUrl);
+      const totalPL = jpStocks.reduce((a, x) => a + x.pl, 0) + usStocks.reduce((a, x) => a + x.pl, 0) + (goldVal - goldCost);
 
-          if (!response.ok) throw new Error('API request failed');
+      return { allStocks, jpTotal, usTotal, goldVal, goldCost, cashJPY, cashUSD, total, totalPL, gainers, losers };
+    }
 
-          const data = await response.json();
-          const newPrices = {};
+    // ===== FORMATTING =====
+    const fY = v => '¥' + Math.round(v).toLocaleString();
+    const fD = v => '$' + v.toFixed(2);
+    const fP = v => (v >= 0 ? '+' : '') + v.toFixed(2) + '%';
+    const fC = v => (v >= 0 ? '+' : '') + fY(v);
 
-          if (data.quoteResponse && data.quoteResponse.result) {
-            data.quoteResponse.result.forEach(quote => {
-              newPrices[quote.symbol] = {
-                price: quote.regularMarketPrice || 0,
-                change: quote.regularMarketChange || 0,
-                changePercent: quote.regularMarketChangePercent || 0,
-              };
-            });
-          }
+    // ===== RENDER =====
+    function render() {
+      const d = calc();
+      const now = new Date().toLocaleTimeString('ja-JP');
 
-          const fallbackPrices = {
-            '6273.T': { price: 61900, change: -1600, changePercent: -2.52 },
-            '6315.T': { price: 3090, change: 80, changePercent: 2.66 },
-            '6954.T': { price: 6580, change: 39, changePercent: 0.60 },
-            '8058.T': { price: 4082, change: 36, changePercent: 0.89 },
-            '8766.T': { price: 5811, change: -8, changePercent: -0.14 },
-            'VWO': { price: 56.11, change: 0.57, changePercent: 1.03 },
-            'VOO': { price: 630.29, change: 7.14, changePercent: 1.15 },
-            'HDV': { price: 127.80, change: 1.35, changePercent: 1.07 },
-            'XLE': { price: 48.75, change: 1.15, changePercent: 2.42 },
-            'XLU': { price: 43.02, change: 0.06, changePercent: 0.14 },
-            'ED': { price: 103.84, change: -1.21, changePercent: -1.15 },
-            'MTZ': { price: 243.80, change: 3.45, changePercent: 1.44 },
-            'DUOL': { price: 146.81, change: -1.77, changePercent: -1.19 },
-            'BITF': { price: 2.69, change: 0.02, changePercent: 0.75 },
-            'URA': { price: 56.15, change: 2.03, changePercent: 3.75 },
-            'IJR': { price: 130.12, change: 3.30, changePercent: 2.60 },
-            'JPY=X': { price: 158.63 },
-          };
+      document.getElementById('app').innerHTML = `
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+          <div>
+            <h1 class="text-2xl md:text-3xl font-bold mb-1">Portfolio Dashboard</h1>
+            <p class="text-gray-400 text-sm">Updated: ${now} · USD/JPY: ¥${fx.toFixed(2)}</p>
+          </div>
+          <button onclick="location.reload()" class="mt-3 md:mt-0 px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg">↻ Refresh</button>
+        </div>
 
-          const mergedPrices = { ...fallbackPrices };
-          Object.keys(newPrices).forEach(key => {
-            if (newPrices[key].price > 0) mergedPrices[key] = newPrices[key];
-          });
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <div class="bg-gray-800 rounded-xl p-4">
+            <p class="text-gray-400 text-sm mb-1">総資産 Total</p>
+            <p class="text-2xl md:text-3xl font-bold">${fY(d.total)}</p>
+          </div>
+          <div class="bg-gray-800 rounded-xl p-4">
+            <p class="text-gray-400 text-sm mb-1">評価損益 P&L</p>
+            <p class="text-2xl md:text-3xl font-bold ${d.totalPL >= 0 ? 'text-green-400' : 'text-red-400'}">${fC(d.totalPL)}</p>
+          </div>
+          <div class="bg-gray-800 rounded-xl p-4">
+            <p class="text-gray-400 text-sm mb-1">国内株式 JP</p>
+            <p class="text-2xl md:text-3xl font-bold text-blue-400">${fY(d.jpTotal)}</p>
+          </div>
+          <div class="bg-gray-800 rounded-xl p-4">
+            <p class="text-gray-400 text-sm mb-1">米国株式 US</p>
+            <p class="text-2xl md:text-3xl font-bold text-green-400">${fD(d.usTotal / fx)}</p>
+          </div>
+        </div>
 
-          setPrices(mergedPrices);
-          setExchangeRate(mergedPrices['JPY=X']?.price || 158.63);
-          setGoldPrice(24605);
-          setLastUpdate(new Date());
-
-        } catch (err) {
-          console.error('Price fetch error:', err);
-          const fallbackPrices = {
-            '6273.T': { price: 61900, change: -1600, changePercent: -2.52 },
-            '6315.T': { price: 3090, change: 80, changePercent: 2.66 },
-            '6954.T': { price: 6580, change: 39, changePercent: 0.60 },
-            '8058.T': { price: 4082, change: 36, changePercent: 0.89 },
-            '8766.T': { price: 5811, change: -8, changePercent: -0.14 },
-            'VWO': { price: 56.11, change: 0.57, changePercent: 1.03 },
-            'VOO': { price: 630.29, change: 7.14, changePercent: 1.15 },
-            'HDV': { price: 127.80, change: 1.35, changePercent: 1.07 },
-            'XLE': { price: 48.75, change: 1.15, changePercent: 2.42 },
-            'XLU': { price: 43.02, change: 0.06, changePercent: 0.14 },
-            'ED': { price: 103.84, change: -1.21, changePercent: -1.15 },
-            'MTZ': { price: 243.80, change: 3.45, changePercent: 1.44 },
-            'DUOL': { price: 146.81, change: -1.77, changePercent: -1.19 },
-            'BITF': { price: 2.69, change: 0.02, changePercent: 0.75 },
-            'URA': { price: 56.15, change: 2.03, changePercent: 3.75 },
-            'IJR': { price: 130.12, change: 3.30, changePercent: 2.60 },
-            'JPY=X': { price: 158.63 },
-          };
-          setPrices(fallbackPrices);
-          setExchangeRate(158.63);
-          setGoldPrice(24605);
-          setLastUpdate(new Date());
-          setError('Using cached prices - live data temporarily unavailable');
-        }
-
-        setLoading(false);
-      };
-
-      useEffect(() => {
-        fetchPrices();
-        const interval = setInterval(fetchPrices, 60000);
-        return () => clearInterval(interval);
-      }, []);
-
-      const portfolioData = useMemo(() => {
-        if (Object.keys(prices).length === 0) return null;
-
-        const jpStocks = HOLDINGS.japanese.map(stock => {
-          const priceData = prices[stock.ticker] || { price: stock.avgCost, change: 0, changePercent: 0 };
-          const currentValue = priceData.price * stock.shares;
-          const costBasis = stock.avgCost * stock.shares;
-          const gainLoss = currentValue - costBasis;
-          const gainLossPercent = costBasis > 0 ? (gainLoss / costBasis) * 100 : 0;
-          const dailyChange = priceData.change * stock.shares;
-          return { ...stock, market: 'JP', currentPrice: priceData.price, priceChange: priceData.change, priceChangePercent: priceData.changePercent, currentValue, costBasis, gainLoss, gainLossPercent, dailyChange, currency: 'JPY' };
-        });
-
-        const usStocks = HOLDINGS.us.map(stock => {
-          const priceData = prices[stock.ticker] || { price: stock.avgCost, change: 0, changePercent: 0 };
-          const currentValueUSD = priceData.price * stock.shares;
-          const currentValue = currentValueUSD * exchangeRate;
-          const costBasisUSD = stock.avgCost * stock.shares;
-          const costBasis = costBasisUSD * exchangeRate;
-          const gainLossUSD = currentValueUSD - costBasisUSD;
-          const gainLoss = gainLossUSD * exchangeRate;
-          const gainLossPercent = costBasisUSD > 0 ? (gainLossUSD / costBasisUSD) * 100 : (stock.avgCost === 0 ? 100 : 0);
-          const dailyChangeUSD = priceData.change * stock.shares;
-          const dailyChange = dailyChangeUSD * exchangeRate;
-          return { ...stock, market: 'US', currentPrice: priceData.price, currentPriceJPY: priceData.price * exchangeRate, priceChange: priceData.change, priceChangePercent: priceData.changePercent, currentValueUSD, currentValue, costBasisUSD, costBasis, gainLossUSD, gainLoss, gainLossPercent, dailyChangeUSD, dailyChange, currency: 'USD' };
-        });
-
-        const goldValue = HOLDINGS.other[0].amount * goldPrice;
-        const goldCost = HOLDINGS.other[0].amount * HOLDINGS.other[0].avgCostPerGram;
-        const goldGainLoss = goldValue - goldCost;
-        const mmfValue = HOLDINGS.other[1].units * (exchangeRate / 1000);
-        const cashJPY = HOLDINGS.other[2].amount;
-        const cashUSD = HOLDINGS.other[3].amount * exchangeRate;
-
-        const jpTotal = jpStocks.reduce((sum, s) => sum + s.currentValue, 0);
-        const usTotal = usStocks.reduce((sum, s) => sum + s.currentValue, 0);
-        const otherTotal = goldValue + mmfValue + cashJPY + cashUSD;
-        const totalValue = jpTotal + usTotal + otherTotal;
-
-        const jpDailyChange = jpStocks.reduce((sum, s) => sum + s.dailyChange, 0);
-        const usDailyChange = usStocks.reduce((sum, s) => sum + s.dailyChange, 0);
-        const totalDailyChange = jpDailyChange + usDailyChange;
-
-        const jpGainLoss = jpStocks.reduce((sum, s) => sum + s.gainLoss, 0);
-        const usGainLoss = usStocks.reduce((sum, s) => sum + s.gainLoss, 0);
-        const totalGainLoss = jpGainLoss + usGainLoss + goldGainLoss;
-
-        const allStocks = [...jpStocks, ...usStocks];
-        const sectorData = {};
-        allStocks.forEach(stock => {
-          if (!sectorData[stock.sector]) sectorData[stock.sector] = { value: 0, gainLoss: 0, dailyChange: 0 };
-          sectorData[stock.sector].value += stock.currentValue;
-          sectorData[stock.sector].gainLoss += stock.gainLoss;
-          sectorData[stock.sector].dailyChange += stock.dailyChange;
-        });
-        sectorData['Gold'] = { value: goldValue, gainLoss: goldGainLoss, dailyChange: 0 };
-        sectorData['Cash'] = { value: cashJPY + cashUSD, gainLoss: 0, dailyChange: 0 };
-        sectorData['MMF'] = { value: mmfValue, gainLoss: 0, dailyChange: 0 };
-
-        const sectorChartData = Object.entries(sectorData).map(([name, data]) => ({ name, value: Math.round(data.value), color: SECTOR_COLORS[name] || '#999' })).sort((a, b) => b.value - a.value);
-
-        const assetClassData = [
-          { name: '米国株式', value: Math.round(usTotal), color: '#10B981' },
-          { name: '国内株式', value: Math.round(jpTotal), color: '#3B82F6' },
-          { name: '金', value: Math.round(goldValue), color: '#FBBF24' },
-          { name: '現金', value: Math.round(cashJPY + cashUSD), color: '#6B7280' },
-          { name: 'MMF', value: Math.round(mmfValue), color: '#84CC16' },
-        ];
-
-        const topGainers = [...allStocks].sort((a, b) => b.priceChangePercent - a.priceChangePercent).slice(0, 3);
-        const topLosers = [...allStocks].sort((a, b) => a.priceChangePercent - b.priceChangePercent).slice(0, 3);
-
-        return { jpStocks, usStocks, allStocks, goldValue, goldGainLoss, mmfValue, cashJPY, cashUSD, jpTotal, usTotal, otherTotal, totalValue, jpDailyChange, usDailyChange, totalDailyChange, jpGainLoss, usGainLoss, totalGainLoss, sectorChartData, assetClassData, topGainers, topLosers };
-      }, [prices, exchangeRate, goldPrice]);
-
-      const filteredHoldings = useMemo(() => {
-        if (!portfolioData) return [];
-        let holdings = [...portfolioData.allStocks];
-
-        switch (filter) {
-          case 'winners': holdings = holdings.filter(h => h.gainLoss > 0); break;
-          case 'losers': holdings = holdings.filter(h => h.gainLoss < 0); break;
-          case 'jp': holdings = holdings.filter(h => h.market === 'JP'); break;
-          case 'us': holdings = holdings.filter(h => h.market === 'US'); break;
-        }
-
-        holdings.sort((a, b) => {
-          let comparison = 0;
-          switch (sortBy) {
-            case 'value': comparison = b.currentValue - a.currentValue; break;
-            case 'change': comparison = b.dailyChange - a.dailyChange; break;
-            case 'gainLoss': comparison = b.gainLoss - a.gainLoss; break;
-            case 'name': comparison = a.name.localeCompare(b.name); break;
-          }
-          return sortDir === 'desc' ? comparison : -comparison;
-        });
-
-        return holdings;
-      }, [portfolioData, filter, sortBy, sortDir]);
-
-      const formatJPY = (value) => new Intl.NumberFormat('ja-JP', { style: 'currency', currency: 'JPY', maximumFractionDigits: 0 }).format(value);
-      const formatUSD = (value) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 }).format(value);
-      const formatPercent = (value) => `${value >= 0 ? '+' : ''}${value.toFixed(2)}%`;
-      const formatChange = (value) => `${value >= 0 ? '+' : ''}${formatJPY(value)}`;
-
-      if (!portfolioData) {
-        return (
-          <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">
-            <div className="text-center">
-              <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-              <p className="text-xl">Loading portfolio data...</p>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          <div class="bg-gray-800 rounded-xl p-4">
+            <h2 class="text-lg font-semibold mb-4">資産配分 Allocation</h2>
+            <div class="space-y-3">
+              ${bar('米国株式 US', d.usTotal, d.total, '#10B981')}
+              ${bar('国内株式 JP', d.jpTotal, d.total, '#3B82F6')}
+              ${bar('金 Gold', d.goldVal, d.total, '#FBBF24')}
+              ${bar('現金 Cash', d.cashJPY + d.cashUSD, d.total, '#6B7280')}
+              ${bar('MMF', holdings.mmf, d.total, '#84CC16')}
             </div>
           </div>
-        );
-      }
+          <div class="bg-gray-800 rounded-xl p-4">
+            <h2 class="text-lg font-semibold mb-4">Today's Movers</h2>
+            <p class="text-green-400 font-medium mb-2">↑ Top Gainers</p>
+            ${d.gainers.map(x => `<div class="flex justify-between py-1 text-sm"><span>${x.t} <span class="text-gray-500">${x.n}</span></span><span class="text-green-400">${fP(x.ch)}</span></div>`).join('')}
+            <p class="text-red-400 font-medium mb-2 mt-4">↓ Top Losers</p>
+            ${d.losers.map(x => `<div class="flex justify-between py-1 text-sm"><span>${x.t} <span class="text-gray-500">${x.n}</span></span><span class="text-red-400">${fP(x.ch)}</span></div>`).join('')}
+          </div>
+        </div>
 
-      return (
-        <div className="min-h-screen bg-gray-900 text-white p-4 md:p-6">
-          <div className="max-w-7xl mx-auto">
-            {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
-              <div>
-                <h1 className="text-2xl md:text-3xl font-bold mb-1">Portfolio Dashboard</h1>
-                <p className="text-gray-400 text-sm">
-                  Last updated: {lastUpdate ? lastUpdate.toLocaleTimeString('ja-JP') : 'Loading...'}
-                  <span className="ml-3">USD/JPY: ¥{exchangeRate.toFixed(2)}</span>
-                </p>
-              </div>
-              <button onClick={fetchPrices} disabled={loading} className="mt-3 md:mt-0 flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition disabled:opacity-50">
-                <RefreshIcon spinning={loading} />
-                Refresh
-              </button>
+        <div class="bg-gray-800 rounded-xl p-4 mb-6 overflow-x-auto">
+          <h2 class="text-lg font-semibold mb-4">保有銘柄 Holdings</h2>
+          <table class="w-full text-sm">
+            <thead><tr class="text-gray-400 border-b border-gray-700">
+              <th class="text-left py-2">銘柄</th>
+              <th class="text-right py-2">数量</th>
+              <th class="text-right py-2">価格</th>
+              <th class="text-right py-2">前日比</th>
+              <th class="text-right py-2">時価</th>
+              <th class="text-right py-2">損益</th>
+            </tr></thead>
+            <tbody>
+              ${d.allStocks.map(x => `
+                <tr class="border-b border-gray-700/50">
+                  <td class="py-2"><span class="text-xs px-1 rounded mr-1 ${x.m === 'JP' ? 'bg-blue-900 text-blue-300' : 'bg-green-900 text-green-300'}">${x.m}</span>${x.t} <span class="text-gray-500 text-xs">${x.n}</span></td>
+                  <td class="text-right py-2">${x.s}</td>
+                  <td class="text-right py-2">${x.m === 'JP' ? fY(x.p) : fD(x.p)}</td>
+                  <td class="text-right py-2 ${x.ch >= 0 ? 'text-green-400' : 'text-red-400'}">${fP(x.ch)}</td>
+                  <td class="text-right py-2">${fY(x.val)}</td>
+                  <td class="text-right py-2 ${x.pl >= 0 ? 'text-green-400' : 'text-red-400'}">${fC(x.pl)}<br><span class="text-xs">(${fP(x.plPct)})</span></td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="bg-gray-800 rounded-xl p-4">
+          <h2 class="text-lg font-semibold mb-4">その他 Other Assets</h2>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="bg-gray-700/50 rounded-lg p-3">
+              <p class="text-gray-400 text-sm">金 Gold</p>
+              <p class="text-xl font-bold text-yellow-400">${fY(d.goldVal)}</p>
+              <p class="text-sm ${d.goldVal - d.goldCost >= 0 ? 'text-green-400' : 'text-red-400'}">${fC(d.goldVal - d.goldCost)}</p>
             </div>
-
-            {error && <div className="bg-red-900/50 border border-red-700 rounded-lg p-3 mb-6 text-red-200">{error}</div>}
-
-            {/* Summary Cards */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-              <div className="bg-gray-800 rounded-xl p-4">
-                <p className="text-gray-400 text-sm mb-1">総資産 Total Value</p>
-                <p className="text-2xl md:text-3xl font-bold">{formatJPY(portfolioData.totalValue)}</p>
-              </div>
-              <div className="bg-gray-800 rounded-xl p-4">
-                <p className="text-gray-400 text-sm mb-1">前日比 Daily Change</p>
-                <p className={`text-2xl md:text-3xl font-bold flex items-center gap-2 ${portfolioData.totalDailyChange >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                  {portfolioData.totalDailyChange >= 0 ? <TrendingUp /> : <TrendingDown />}
-                  {formatChange(portfolioData.totalDailyChange)}
-                </p>
-              </div>
-              <div className="bg-gray-800 rounded-xl p-4">
-                <p className="text-gray-400 text-sm mb-1">評価損益 Total P&L</p>
-                <p className={`text-2xl md:text-3xl font-bold ${portfolioData.totalGainLoss >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                  {formatChange(portfolioData.totalGainLoss)}
-                </p>
-              </div>
-              <div className="bg-gray-800 rounded-xl p-4">
-                <p className="text-gray-400 text-sm mb-1">米ドル資産 USD Assets</p>
-                <p className="text-2xl md:text-3xl font-bold text-blue-400">{formatUSD(portfolioData.usTotal / exchangeRate)}</p>
-              </div>
+            <div class="bg-gray-700/50 rounded-lg p-3">
+              <p class="text-gray-400 text-sm">MMF</p>
+              <p class="text-xl font-bold">${fY(holdings.mmf)}</p>
             </div>
-
-            {/* Charts */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-              <div className="bg-gray-800 rounded-xl p-4">
-                <h2 className="text-lg font-semibold mb-4">資産配分 Asset Allocation</h2>
-                <ResponsiveContainer width="100%" height={250}>
-                  <PieChart>
-                    <Pie data={portfolioData.assetClassData} cx="50%" cy="50%" innerRadius={60} outerRadius={100} paddingAngle={2} dataKey="value">
-                      {portfolioData.assetClassData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
-                    </Pie>
-                    <Tooltip formatter={(value) => formatJPY(value)} contentStyle={{ backgroundColor: '#1f2937', border: 'none', borderRadius: '8px' }} />
-                    <Legend />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-              <div className="bg-gray-800 rounded-xl p-4">
-                <h2 className="text-lg font-semibold mb-4">セクター別 By Sector</h2>
-                <ResponsiveContainer width="100%" height={250}>
-                  <PieChart>
-                    <Pie data={portfolioData.sectorChartData} cx="50%" cy="50%" innerRadius={60} outerRadius={100} paddingAngle={2} dataKey="value">
-                      {portfolioData.sectorChartData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
-                    </Pie>
-                    <Tooltip formatter={(value) => formatJPY(value)} contentStyle={{ backgroundColor: '#1f2937', border: 'none', borderRadius: '8px' }} />
-                    <Legend />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
+            <div class="bg-gray-700/50 rounded-lg p-3">
+              <p class="text-gray-400 text-sm">円 JPY</p>
+              <p class="text-xl font-bold">${fY(d.cashJPY)}</p>
             </div>
-
-            {/* Top Movers */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-              <div className="bg-gray-800 rounded-xl p-4">
-                <h2 className="text-lg font-semibold mb-3 flex items-center gap-2 text-green-400">
-                  <TrendingUp /> Top Gainers Today
-                </h2>
-                <div className="space-y-2">
-                  {portfolioData.topGainers.map((stock) => (
-                    <div key={stock.ticker} className="flex justify-between items-center bg-gray-700/50 rounded-lg p-3">
-                      <div>
-                        <span className="font-medium">{stock.ticker.replace('.T', '')}</span>
-                        <span className="text-gray-400 text-sm ml-2">{stock.name}</span>
-                      </div>
-                      <span className="text-green-400 font-medium">{formatPercent(stock.priceChangePercent)}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div className="bg-gray-800 rounded-xl p-4">
-                <h2 className="text-lg font-semibold mb-3 flex items-center gap-2 text-red-400">
-                  <TrendingDown /> Top Losers Today
-                </h2>
-                <div className="space-y-2">
-                  {portfolioData.topLosers.map((stock) => (
-                    <div key={stock.ticker} className="flex justify-between items-center bg-gray-700/50 rounded-lg p-3">
-                      <div>
-                        <span className="font-medium">{stock.ticker.replace('.T', '')}</span>
-                        <span className="text-gray-400 text-sm ml-2">{stock.name}</span>
-                      </div>
-                      <span className="text-red-400 font-medium">{formatPercent(stock.priceChangePercent)}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Holdings Table */}
-            <div className="bg-gray-800 rounded-xl p-4">
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
-                <h2 className="text-lg font-semibold">保有銘柄 Holdings</h2>
-                <div className="flex flex-wrap gap-2 mt-3 md:mt-0">
-                  <div className="flex items-center gap-1 bg-gray-700 rounded-lg p-1">
-                    {[{ key: 'all', label: 'All' }, { key: 'jp', label: '🇯🇵 JP' }, { key: 'us', label: '🇺🇸 US' }, { key: 'winners', label: '📈' }, { key: 'losers', label: '📉' }].map(({ key, label }) => (
-                      <button key={key} onClick={() => setFilter(key)} className={`px-3 py-1 rounded-md text-sm transition ${filter === key ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white'}`}>
-                        {label}
-                      </button>
-                    ))}
-                  </div>
-                  <select value={`${sortBy}-${sortDir}`} onChange={(e) => { const [by, dir] = e.target.value.split('-'); setSortBy(by); setSortDir(dir); }} className="bg-gray-700 rounded-lg px-3 py-1 text-sm">
-                    <option value="value-desc">Value ↓</option>
-                    <option value="value-asc">Value ↑</option>
-                    <option value="change-desc">Daily Change ↓</option>
-                    <option value="change-asc">Daily Change ↑</option>
-                    <option value="gainLoss-desc">P&L ↓</option>
-                    <option value="gainLoss-asc">P&L ↑</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="text-gray-400 border-b border-gray-700">
-                      <th className="text-left py-3 px-2">銘柄 Symbol</th>
-                      <th className="text-right py-3 px-2">株数</th>
-                      <th className="text-right py-3 px-2">現在値</th>
-                      <th className="text-right py-3 px-2">前日比</th>
-                      <th className="text-right py-3 px-2">時価</th>
-                      <th className="text-right py-3 px-2">損益</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredHoldings.map((stock) => (
-                      <tr key={stock.ticker} className="border-b border-gray-700/50 hover:bg-gray-700/30">
-                        <td className="py-3 px-2">
-                          <div className="flex items-center gap-2">
-                            <span className={`px-1.5 py-0.5 rounded text-xs ${stock.market === 'JP' ? 'bg-blue-900 text-blue-300' : 'bg-green-900 text-green-300'}`}>{stock.market}</span>
-                            <div>
-                              <div className="font-medium">{stock.ticker.replace('.T', '')}</div>
-                              <div className="text-gray-400 text-xs">{stock.name}</div>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="text-right py-3 px-2">{stock.shares}</td>
-                        <td className="text-right py-3 px-2">{stock.market === 'JP' ? formatJPY(stock.currentPrice) : formatUSD(stock.currentPrice)}</td>
-                        <td className={`text-right py-3 px-2 ${stock.priceChange >= 0 ? 'text-green-400' : 'text-red-400'}`}>{formatPercent(stock.priceChangePercent)}</td>
-                        <td className="text-right py-3 px-2 font-medium">{formatJPY(stock.currentValue)}</td>
-                        <td className={`text-right py-3 px-2 ${stock.gainLoss >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                          <div>{formatChange(stock.gainLoss)}</div>
-                          <div className="text-xs">({formatPercent(stock.gainLossPercent)})</div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            {/* Other Assets */}
-            <div className="mt-6 bg-gray-800 rounded-xl p-4">
-              <h2 className="text-lg font-semibold mb-4">その他資産 Other Assets</h2>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-gray-700/50 rounded-lg p-3">
-                  <p className="text-gray-400 text-sm">金 Gold</p>
-                  <p className="text-xl font-bold text-yellow-400">{formatJPY(portfolioData.goldValue)}</p>
-                  <p className={`text-sm ${portfolioData.goldGainLoss >= 0 ? 'text-green-400' : 'text-red-400'}`}>{formatChange(portfolioData.goldGainLoss)}</p>
-                </div>
-                <div className="bg-gray-700/50 rounded-lg p-3">
-                  <p className="text-gray-400 text-sm">MMF</p>
-                  <p className="text-xl font-bold">{formatJPY(portfolioData.mmfValue)}</p>
-                </div>
-                <div className="bg-gray-700/50 rounded-lg p-3">
-                  <p className="text-gray-400 text-sm">円預り金 JPY Cash</p>
-                  <p className="text-xl font-bold">{formatJPY(portfolioData.cashJPY)}</p>
-                </div>
-                <div className="bg-gray-700/50 rounded-lg p-3">
-                  <p className="text-gray-400 text-sm">ドル預り金 USD Cash</p>
-                  <p className="text-xl font-bold">{formatJPY(portfolioData.cashUSD)}</p>
-                  <p className="text-sm text-gray-400">{formatUSD(HOLDINGS.other[3].amount)}</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Footer */}
-            <div className="mt-6 text-center text-gray-500 text-sm">
-              <p>Data refreshes automatically every 60 seconds</p>
-              <p>Prices may be delayed. For informational purposes only.</p>
+            <div class="bg-gray-700/50 rounded-lg p-3">
+              <p class="text-gray-400 text-sm">$ USD</p>
+              <p class="text-xl font-bold">${fY(d.cashUSD)}</p>
+              <p class="text-sm text-gray-400">${fD(holdings.cash.usd)}</p>
             </div>
           </div>
         </div>
-      );
+        <p class="text-center text-gray-500 text-sm mt-6">Click Refresh to update · Prices from Rakuten Securities</p>
+      `;
     }
 
-    ReactDOM.render(<PortfolioDashboard />, document.getElementById('root'));
+    function bar(label, val, total, color) {
+      const pct = (val / total * 100).toFixed(1);
+      return `<div>
+        <div class="flex justify-between text-sm mb-1"><span>${label}</span><span>${fY(val)} (${pct}%)</span></div>
+        <div class="h-3 bg-gray-700 rounded-full"><div class="h-full rounded-full" style="width:${pct}%;background:${color}"></div></div>
+      </div>`;
+    }
+
+    // Start
+    render();
   </script>
 </body>
 </html>
